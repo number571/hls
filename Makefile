@@ -1,8 +1,13 @@
+CC=gcc
 GC=go build
-GFILES=service.go initial.go config.go database.go models.go
-.PHONY: default build clean
-default: build
+GFILES=main.go client.go server.go funcs.go
+.PHONY: default build run clean
+default: build run
 build: $(GFILES)
-	$(GC) service.go initial.go config.go database.go models.go
+	$(GC) main.go funcs.go
+	$(GC) client.go funcs.go
+	$(GC) server.go
+run: main 
+	./main
 clean:
-	rm -f service service.db service.cfg
+	rm -f main client server config.json priv.key pub.key
