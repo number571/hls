@@ -7,15 +7,16 @@ import (
 	cr "github.com/number571/go-peer/crypto"
 	lc "github.com/number571/go-peer/local"
 	nt "github.com/number571/go-peer/network"
-	gp "github.com/number571/go-peer/settings"
+
+	st "github.com/number571/hls/settings"
 )
 
 func main() {
-	priv := cr.NewPrivKey(gp.Get("AKEY_SIZE").(uint))
+	priv := cr.NewPrivKey(st.AKEYSIZE)
+	client := lc.NewClient(priv, st.SETTINGS)
 
-	client := lc.NewClient(priv)
 	node := nt.NewNode(client).
-		Handle([]byte(HLS), nil)
+		Handle([]byte(st.HLS), nil)
 
 	err := node.Connect("localhost:9571")
 	if err != nil {
@@ -24,9 +25,9 @@ func main() {
 	}
 
 	msg := lc.NewMessage(
-		[]byte(HLS),
-		serialize(&Request{
-			Host:   ServerAddressInHLS,
+		[]byte(st.HLS),
+		st.Serialize(&st.Request{
+			Host:   st.ServerAddressInHLS,
 			Path:   "/echo",
 			Method: "GET",
 			Head: map[string]string{
@@ -34,13 +35,12 @@ func main() {
 			},
 			Body: []byte(`{"message": "hello, world!"}`),
 		}),
-		gp.Get("POWS_DIFF").(uint),
 	)
 
-	spub := string(readFile(FileWithPubKey))
-	route := lc.NewRoute(cr.LoadPubKeyByString(spub))
+	spub := string(st.ReadFile(fmt.Sprintf("../service/%s", st.FileWithPubKey)))
+	route := lc.NewRoute(cr.LoadPubKeyByString(spub), nil, nil)
 
-	res, err := node.Send(msg, route)
+	res, err := node.Broadcast(route, msg)
 	if err != nil {
 		fmt.Println(err)
 		return

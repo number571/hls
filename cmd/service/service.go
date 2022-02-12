@@ -11,7 +11,8 @@ import (
 	cr "github.com/number571/go-peer/crypto"
 	lc "github.com/number571/go-peer/local"
 	nt "github.com/number571/go-peer/network"
-	gp "github.com/number571/go-peer/settings"
+
+	st "github.com/number571/hls/settings"
 )
 
 type CFG struct {
@@ -27,7 +28,7 @@ var (
 
 const (
 	FileWithPrivKey = "priv.key"
-	FileWithConfig  = "config.json"
+	FileWithConfig  = "hls.cfg"
 )
 
 func init() {
@@ -36,25 +37,25 @@ func init() {
 	flag.BoolVar(&initOnly, "init-only", false, "run initialization only")
 	flag.Parse()
 
-	if !fileIsExist(FileWithPrivKey) {
-		priv := cr.NewPrivKey(gp.Get("AKEY_SIZE").(uint))
-		writeFile(FileWithPrivKey, []byte(priv.String()))
-		writeFile(FileWithPubKey, []byte(priv.PubKey().String()))
+	if !st.FileIsExist(FileWithPrivKey) {
+		priv := cr.NewPrivKey(st.AKEYSIZE)
+		st.WriteFile(FileWithPrivKey, []byte(priv.String()))
+		st.WriteFile(st.FileWithPubKey, []byte(priv.PubKey().String()))
 	}
-	spriv := string(readFile(FileWithPrivKey))
+	spriv := string(st.ReadFile(FileWithPrivKey))
 	PrivKey = cr.LoadPrivKeyByString(spriv)
 
-	if !fileIsExist(FileWithConfig) {
+	if !st.FileIsExist(FileWithConfig) {
 		config := &CFG{
 			Address:  "localhost:9571",
 			Connects: []string{"127.0.0.2:9571"},
 			Services: map[string]string{
-				ServerAddressInHLS: "http://localhost:8080",
+				st.ServerAddressInHLS: "http://localhost:8080",
 			},
 		}
-		writeFile(FileWithConfig, serialize(config))
+		st.WriteFile(FileWithConfig, st.Serialize(config))
 	}
-	deserialize(readFile(FileWithConfig), &Config)
+	st.Deserialize(st.ReadFile(FileWithConfig), &Config)
 
 	if initOnly {
 		os.Exit(0)
@@ -64,9 +65,9 @@ func init() {
 func main() {
 	fmt.Println("Service is listening...")
 
-	client := lc.NewClient(PrivKey)
+	client := lc.NewClient(PrivKey, st.SETTINGS)
 	node := nt.NewNode(client).
-		Handle([]byte(HLS), hlservice)
+		Handle([]byte(st.HLS), hlservice)
 
 	for _, conn := range Config.Connects {
 		err := node.Connect(conn)
@@ -85,10 +86,10 @@ func main() {
 	}
 }
 
-func hlservice(client *lc.Client, msg *lc.Message) []byte {
-	request := new(Request)
+func hlservice(client lc.Client, msg lc.Message) []byte {
+	request := new(st.Request)
 
-	deserialize(msg.Body.Data, request)
+	st.Deserialize(msg.Body.Data, request)
 	if request == nil {
 		return nil
 	}

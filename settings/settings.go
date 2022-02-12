@@ -1,9 +1,11 @@
-package main
+package settings
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+
+	gp "github.com/number571/go-peer/settings"
 )
 
 type Request struct {
@@ -15,17 +17,22 @@ type Request struct {
 }
 
 const (
+	AKEYSIZE           = 2048
 	HLS                = "hidden-lake-service"
 	FileWithPubKey     = "pub.key"
 	ServerAddressInHLS = "route-service"
 )
 
-func fileIsExist(file string) bool {
+var (
+	SETTINGS = gp.NewSettings()
+)
+
+func FileIsExist(file string) bool {
 	_, err := os.Stat(file)
 	return !os.IsNotExist(err)
 }
 
-func readFile(file string) []byte {
+func ReadFile(file string) []byte {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil
@@ -33,11 +40,11 @@ func readFile(file string) []byte {
 	return data
 }
 
-func writeFile(file string, data []byte) error {
+func WriteFile(file string, data []byte) error {
 	return ioutil.WriteFile(file, data, 0644)
 }
 
-func serialize(data interface{}) []byte {
+func Serialize(data interface{}) []byte {
 	res, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return nil
@@ -45,6 +52,6 @@ func serialize(data interface{}) []byte {
 	return res
 }
 
-func deserialize(data []byte, res interface{}) error {
+func Deserialize(data []byte, res interface{}) error {
 	return json.Unmarshal(data, res)
 }

@@ -1,13 +1,9 @@
-CC=gcc
 GC=go build
-GFILES=main.go client.go server.go funcs.go
-.PHONY: default build run clean
-default: build run
-build: $(GFILES)
-	$(GC) main.go funcs.go
-	$(GC) client.go funcs.go
-	$(GC) server.go
-run: main 
-	./main
+.PHONY: default build clean
+default: build
+build:
+	$(GC) -o cmd/client/c-hls cmd/client/*.go
+	$(GC) -o cmd/server/s-hls cmd/server/*.go
+	$(GC) -o cmd/service/hls cmd/service/*.go
 clean:
-	rm -f main client server config.json priv.key pub.key
+	rm -f cmd/client/c-hls cmd/server/s-hls cmd/service/hls 
