@@ -1,9 +1,12 @@
+N=1
 GC=go build
-.PHONY: default build clean
-default: build
+.PHONY: default build run test clean
+default: build run
 build:
-	$(GC) -o cmd/client/c-hls cmd/client/*.go
-	$(GC) -o cmd/server/s-hls cmd/server/*.go
-	$(GC) -o cmd/service/hls cmd/service/*.go
+	$(GC) -o hls *.go
+run:
+	./hls	
+test:
+	for i in {1..$(N)}; do go clean -testcache; echo $$i; go test ./...; done
 clean:
-	rm -f cmd/client/c-hls cmd/server/s-hls cmd/service/hls 
+	rm -f hls hls.cfg priv.key pub.key
